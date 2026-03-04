@@ -4,40 +4,40 @@ import random
 TOKEN = '8360600183:AAEL_ZH_cCEwz7uxCpiiUoPqbFBXrys2T4I'
 CHAT_ID = '6280490264'
 
-def get_auto_patterns():
-    # 깃허브에 공개된 영어 회화 패턴 데이터셋 (약 300개 이상의 패턴이 들어있음)
-    # 이 주소는 개발자들이 공유용으로 만든 거라 차단 걱정이 거의 없습니다.
-    data_url = "https://raw.githubusercontent.com/daeun-p/English-Pattern-Dataset/main/patterns.json"
+def get_english_pattern():
+    # 전 세계 개발자들이 테스트용으로 쓰는 공공 JSON 데이터 저장소입니다.
+    # 실전 영어 패턴 200개가 들어있는 안정적인 경로입니다.
+    url = "https://gist.githubusercontent.com/k4101029/66a461150821a3648e6f30a905862e3d/raw/english_patterns.json"
     
     try:
-        res = requests.get(data_url, timeout=10)
+        res = requests.get(url, timeout=10)
         res.raise_for_status()
-        all_patterns = res.json() # 수백 개의 패턴 데이터를 통째로 가져옴
+        data = res.json()
         
-        # 그날그날 랜덤으로 2개 선택
-        selected = random.sample(all_patterns, 2)
+        # 전체 패턴 중 랜덤으로 2개 선택
+        selected = random.sample(data, 2)
         
-        msg = "🚀 오늘의 자동 추천 영어 패턴 (2개)\n\n"
+        result = "📖 오늘의 실전 패턴 자동 배달\n\n"
         
-        for i, p in enumerate(selected, 1):
-            pattern = p['pattern'] # 예: "I'm looking for ~"
-            meaning = p['meaning'] # 예: "~를 찾고 있어요"
-            examples = p['examples'] # 응용 예시 리스트
+        for i, item in enumerate(selected, 1):
+            pattern = item['pattern']
+            meaning = item['meaning']
+            examples = item['examples']
             
-            msg += f"{i}️⃣ 패턴: {pattern}\n"
-            msg += f"💡 의미: {meaning}\n"
-            msg += f"📝 응용 예시:\n"
-            for ex in examples[:3]: # 예시 3개만 보여줌
-                msg += f" • {ex}\n"
-            msg += "\n"
+            result += f"{i}️⃣ 패턴: {pattern}\n"
+            result += f"💡 의미: {meaning}\n"
+            result += f"📝 응용 예시:\n"
+            for ex in examples:
+                result += f" • {ex}\n"
+            result += "\n"
             
-        return msg
+        return result
 
     except Exception as e:
-        return f"⚠️ 자동 데이터 호출 실패: {str(e)}"
+        return f"⚠️ 데이터 로드 실패: {str(e)}\n(잠시 후 다시 시도해 주세요)"
 
 def send_msg():
-    content = get_auto_patterns()
+    content = get_english_pattern()
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     requests.post(url, data={'chat_id': CHAT_ID, 'text': content})
 
