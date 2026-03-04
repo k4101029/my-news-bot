@@ -1,4 +1,31 @@
-name: Daily Bitcoin News
+name: Weekly Bitcoin News
+
+on:
+  schedule:
+    # 매주 월요일 저녁 8시 (한국 시간 기준)
+    # UTC 기준으로는 월요일 오전 11시입니다.
+    # cron: '분 시 일 월 요일'
+    - cron: '0 11 * * 3'
+  workflow_dispatch: # 언제든 수동으로 실행해볼 수 있는 버튼
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 lxml
+
+      - name: Run script
+        run: python news.pyname: Daily Bitcoin News
 
 on:
   schedule:
