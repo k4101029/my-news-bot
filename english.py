@@ -1,43 +1,45 @@
 import requests
-from bs4 import BeautifulSoup
+import random
 
 TOKEN = '8360600183:AAEL_ZH_cCEwz7uxCpiiUoPqbFBXrys2T4I'
 CHAT_ID = '6280490264'
 
-def get_google_english():
-    # 구글 뉴스에서 'Learning English' 검색 결과 (RSS 피드 방식 - 차단 없음)
-    url = "https://news.google.com/rss/search?q=Learning+English+phrase&hl=en-US&gl=US&ceid=US:en"
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-    }
+def get_auto_patterns():
+    # 깃허브에 공개된 영어 회화 패턴 데이터셋 (약 300개 이상의 패턴이 들어있음)
+    # 이 주소는 개발자들이 공유용으로 만든 거라 차단 걱정이 거의 없습니다.
+    data_url = "https://raw.githubusercontent.com/daeun-p/English-Pattern-Dataset/main/patterns.json"
     
     try:
-        res = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(res.content, 'xml') # RSS는 xml 형식을 사용합니다.
+        res = requests.get(data_url, timeout=10)
+        res.raise_for_status()
+        all_patterns = res.json() # 수백 개의 패턴 데이터를 통째로 가져옴
         
-        # 최신 뉴스 아이템 3개 가져오기
-        items = soup.find_all('item')[:3]
+        # 그날그날 랜덤으로 2개 선택
+        selected = random.sample(all_patterns, 2)
         
-        if not items:
-            return "⚠️ 구글 뉴스에서 정보를 찾을 수 없습니다."
-            
-        result_text = "🌐 Google News: 오늘의 영어 학습\n\n"
+        msg = "🚀 오늘의 자동 추천 영어 패턴 (2개)\n\n"
         
-        for i, item in enumerate(items, 1):
-            title = item.title.text
-            link = item.link.text
-            result_text += f"{i}. {title}\n🔗 {link}\n\n"
+        for i, p in enumerate(selected, 1):
+            pattern = p['pattern'] # 예: "I'm looking for ~"
+            meaning = p['meaning'] # 예: "~를 찾고 있어요"
+            examples = p['examples'] # 응용 예시 리스트
             
-        return result_text
+            msg += f"{i}️⃣ 패턴: {pattern}\n"
+            msg += f"💡 의미: {meaning}\n"
+            msg += f"📝 응용 예시:\n"
+            for ex in examples[:3]: # 예시 3개만 보여줌
+                msg += f" • {ex}\n"
+            msg += "\n"
             
+        return msg
+
     except Exception as e:
-        return f"⚠️ 구글 접속 실패: {str(e)}"
+        return f"⚠️ 자동 데이터 호출 실패: {str(e)}"
 
 def send_msg():
-    content = get_google_english()
-    send_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    requests.post(send_url, data={'chat_id': CHAT_ID, 'text': content})
+    content = get_auto_patterns()
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    requests.post(url, data={'chat_id': CHAT_ID, 'text': content})
 
 if __name__ == "__main__":
     send_msg()
